@@ -1,12 +1,15 @@
 package args
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/UmbrellaCrow612/fsearch/src/out"
 )
@@ -26,11 +29,6 @@ var AllOpenWith = []OpenWith{
 	NotePad,
 	VSCode,
 	Explorer,
-}
-
-// IsValid checks if the OpenWith value is valid.
-func (o OpenWith) IsValid() bool {
-	return slices.Contains(AllOpenWith, o)
 }
 
 // String returns the string representation of the OpenWith value.
@@ -59,11 +57,6 @@ var AllSizeFormats = []SizeFormat{
 	TB,
 }
 
-// IsValid checks if the SizeFormat value is valid.
-func (s SizeFormat) IsValid() bool {
-	return slices.Contains(AllSizeFormats, s)
-}
-
 // String returns the string representation of the SizeFormat value.
 func (s SizeFormat) String() string {
 	return string(s)
@@ -82,11 +75,6 @@ const (
 var AllMatchTypes = []MatchType{
 	File,
 	Folder,
-}
-
-// IsValid checks if the MatchType value is valid.
-func (m MatchType) IsValid() bool {
-	return slices.Contains(AllMatchTypes, m)
 }
 
 // String returns the string representation of the MatchType value.
@@ -177,12 +165,83 @@ func Parse() *ArgsMap {
 	argMap := &ArgsMap{}
 	setArgsMapValues(argMap)
 
+	err := validateArgsMap(argMap)
+	if err != nil {
+		out.ExitError(err.Error())
+	}
+
 	if argMap.Debug {
 		printArgsMapValues(argMap)
 		out.ExitSuccess()
 	}
 
 	return argMap
+}
+
+// validateArgsMap checks the parsed args for invalid combinations or values.
+func validateArgsMap(argsMap *ArgsMap) error {
+	fileInfo, err := os.Stat(argsMap.Path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("path does not exist: %s", argsMap.Path)
+		}
+		return fmt.Errorf("error checking path: %v", err)
+	}
+	if !fileInfo.IsDir() {
+		return fmt.Errorf("path is not a directory: %s", argsMap.Path)
+	}
+
+	if argsMap.OpenWith != "" && !isValidEnumValue(string(argsMap.OpenWith), allOpenWithStrings()) {
+		return fmt.Errorf("invalid --open-with value: %s. Must be one of: %v", argsMap.OpenWith, allOpenWithStrings())
+	}
+	if argsMap.Type != "" && !isValidEnumValue(string(argsMap.Type), allMatchTypeStrings()) {
+		return fmt.Errorf("invalid --type value: %s. Must be one of: %v", argsMap.Type, allMatchTypeStrings())
+	}
+
+	if argsMap.Lines < 0 {
+		return errors.New("--lines value cannot be negative")
+	}
+	if argsMap.Limit < 0 {
+		return errors.New("--limit value cannot be negative")
+	}
+	if argsMap.Depth < 0 {
+		return errors.New("--depth value cannot be negative")
+	}
+	if argsMap.MinSize < 0 {
+		return errors.New("--min-size value cannot be negative")
+	}
+	if argsMap.MaxSize < 0 {
+		return errors.New("--max-size value cannot be negative")
+	}
+
+	if argsMap.ModifiedBefore != "" && !isValidDate(argsMap.ModifiedBefore) {
+		return fmt.Errorf("invalid date format for --modified-before: %s. Must be YYYY-MM-DD", argsMap.ModifiedBefore)
+	}
+	if argsMap.ModifiedAfter != "" && !isValidDate(argsMap.ModifiedAfter) {
+		return fmt.Errorf("invalid date format for --modified-after: %s. Must be YYYY-MM-DD", argsMap.ModifiedAfter)
+	}
+
+	if argsMap.Regex {
+		if _, err := regexp.Compile(argsMap.Term); err != nil {
+			return fmt.Errorf("invalid regex term: %v", err)
+		}
+	}
+
+	if argsMap.Lines > 0 && !argsMap.Preview {
+		return errors.New("--lines flag requires --preview flag to be set")
+	}
+	if argsMap.OpenWith != "" && !argsMap.Open {
+		return errors.New("--open-with flag requires --open flag to be set")
+	}
+	if argsMap.MaxSize > 0 && argsMap.MinSize > 0 && argsMap.MaxSize < argsMap.MinSize && argsMap.MinSizeFormat == argsMap.MaxSizeFormat {
+		return errors.New("--max-size cannot be less than --min-size")
+	}
+
+	argsMap.Ext = cleanStringSlice(argsMap.Ext)
+	argsMap.ExcludeExt = cleanStringSlice(argsMap.ExcludeExt)
+	argsMap.ExcludeDir = cleanStringSlice(argsMap.ExcludeDir)
+
+	return nil
 }
 
 // Sets the cli args flags into the args map
@@ -307,4 +366,53 @@ func sliceToString(v reflect.Value) string {
 	}
 	s += "]"
 	return s
+}
+
+// --- Validation Helper Functions ---
+
+// isValidEnumValue checks if a value exists in a list of valid strings.
+func isValidEnumValue(value string, validValues []string) bool {
+	return slices.Contains(validValues, value)
+}
+
+// allOpenWithStrings converts AllOpenWith to a string slice for validation.
+func allOpenWithStrings() []string {
+	s := make([]string, len(AllOpenWith))
+	for i, v := range AllOpenWith {
+		s[i] = v.String()
+	}
+	return s
+}
+
+// allMatchTypeStrings converts AllMatchTypes to a string slice for validation.
+func allMatchTypeStrings() []string {
+	s := make([]string, len(AllMatchTypes))
+	for i, v := range AllMatchTypes {
+		s[i] = v.String()
+	}
+	return s
+}
+
+// isValidDate checks if a string is a valid YYYY-MM-DD date.
+func isValidDate(dateStr string) bool {
+	_, err := time.Parse("2006-01-02", dateStr)
+	return err == nil
+}
+
+// cleanStringSlice removes empty strings from a slice,
+// which can result from parsing "val1,,val2".
+func cleanStringSlice(s []string) []string {
+	if s == nil {
+		return nil
+	}
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	if len(r) == 0 {
+		return nil // Return nil instead of an empty slice
+	}
+	return r
 }
