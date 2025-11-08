@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -180,6 +181,12 @@ func Parse() *ArgsMap {
 
 // validateArgsMap checks the parsed args for invalid combinations or values.
 func validateArgsMap(argsMap *ArgsMap) error {
+	absPath, err := filepath.Abs(argsMap.Path)
+	if err != nil {
+		return fmt.Errorf("could not resolve absolute path for %s: %v", argsMap.Path, err)
+	}
+	argsMap.Path = absPath
+
 	fileInfo, err := os.Stat(argsMap.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
