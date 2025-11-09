@@ -163,7 +163,12 @@ type ArgsMap struct {
 
 // Parses the args
 func Parse() *ArgsMap {
-	argMap := &ArgsMap{}
+	argMap := &ArgsMap{
+		Type:  "file",
+		Lines: 10,
+		Depth: 0,
+		Limit: 0,
+	}
 	setArgsMapValues(argMap)
 
 	err := validateArgsMap(argMap)
@@ -260,7 +265,7 @@ func setArgsMapValues(argsMap *ArgsMap) {
 
 	argsMap.Term = args[0]
 	if isEmptyOrWhitespace(argsMap.Term) {
-		out.ExitError("Search term cannot be empty or whitesapce")
+		out.ExitError("Search term cannot be empty or whitespace")
 	}
 
 	argsMap.Path = args[len(args)-1]
@@ -282,28 +287,70 @@ func setArgsMapValues(argsMap *ArgsMap) {
 			argsMap.OpenWith = OpenWith(strings.TrimPrefix(arg, "--open-with="))
 		case arg == "--preview":
 			argsMap.Preview = true
+
 		case strings.HasPrefix(arg, "--lines="):
-			argsMap.Lines, _ = strconv.Atoi(strings.TrimPrefix(arg, "--lines="))
+			val := strings.TrimPrefix(arg, "--lines=")
+			lines, err := strconv.Atoi(val)
+			if err != nil || lines < 0 {
+				out.ExitError(fmt.Sprintf("Invalid value for --lines: '%s' (must be a positive integer)", val))
+			}
+			argsMap.Lines = lines
+
 		case strings.HasPrefix(arg, "--limit="):
-			argsMap.Limit, _ = strconv.Atoi(strings.TrimPrefix(arg, "--limit="))
+			val := strings.TrimPrefix(arg, "--limit=")
+			limit, err := strconv.Atoi(val)
+			if err != nil || limit <= 0 {
+				out.ExitError(fmt.Sprintf("Invalid value for --limit: '%s' (must be a positive integer)", val))
+			}
+			argsMap.Limit = limit
+
 		case strings.HasPrefix(arg, "--depth="):
-			argsMap.Depth, _ = strconv.Atoi(strings.TrimPrefix(arg, "--depth="))
+			val := strings.TrimPrefix(arg, "--depth=")
+			depth, err := strconv.Atoi(val)
+			if err != nil || depth < 0 {
+				out.ExitError(fmt.Sprintf("Invalid value for --depth: '%s' (must be a non-negative integer)", val))
+			}
+			argsMap.Depth = depth
+
 		case strings.HasPrefix(arg, "--ext="):
 			argsMap.Ext = strings.Split(strings.TrimPrefix(arg, "--ext="), ",")
+
 		case strings.HasPrefix(arg, "--exclude-ext="):
 			argsMap.ExcludeExt = strings.Split(strings.TrimPrefix(arg, "--exclude-ext="), ",")
+
 		case strings.HasPrefix(arg, "--exclude-dir="):
 			argsMap.ExcludeDir = strings.Split(strings.TrimPrefix(arg, "--exclude-dir="), ",")
+
 		case strings.HasPrefix(arg, "--min-size="):
 			val := strings.TrimPrefix(arg, "--min-size=")
-			argsMap.MinSize, argsMap.MinSizeFormat = parseSize(val)
+			size, format := parseSize(val)
+			if size < 0 {
+				out.ExitError(fmt.Sprintf("Invalid value for --min-size: '%s'", val))
+			}
+			argsMap.MinSize, argsMap.MinSizeFormat = size, format
+
 		case strings.HasPrefix(arg, "--max-size="):
 			val := strings.TrimPrefix(arg, "--max-size=")
-			argsMap.MaxSize, argsMap.MaxSizeFormat = parseSize(val)
+			size, format := parseSize(val)
+			if size < 0 {
+				out.ExitError(fmt.Sprintf("Invalid value for --max-size: '%s'", val))
+			}
+			argsMap.MaxSize, argsMap.MaxSizeFormat = size, format
+
 		case strings.HasPrefix(arg, "--modified-before="):
-			argsMap.ModifiedBefore = strings.TrimPrefix(arg, "--modified-before=")
+			val := strings.TrimPrefix(arg, "--modified-before=")
+			if !isValidDate(val) {
+				out.ExitError(fmt.Sprintf("Invalid date format for --modified-before: '%s' (expected YYYY-MM-DD)", val))
+			}
+			argsMap.ModifiedBefore = val
+
 		case strings.HasPrefix(arg, "--modified-after="):
-			argsMap.ModifiedAfter = strings.TrimPrefix(arg, "--modified-after=")
+			val := strings.TrimPrefix(arg, "--modified-after=")
+			if !isValidDate(val) {
+				out.ExitError(fmt.Sprintf("Invalid date format for --modified-after: '%s' (expected YYYY-MM-DD)", val))
+			}
+			argsMap.ModifiedAfter = val
+
 		case arg == "--hidden":
 			argsMap.Hidden = true
 		case arg == "--count":
@@ -314,8 +361,16 @@ func setArgsMapValues(argsMap *ArgsMap) {
 			argsMap.Regex = true
 		case arg == "--debug":
 			argsMap.Debug = true
+
 		case strings.HasPrefix(arg, "--type="):
-			argsMap.Type = MatchType(strings.TrimPrefix(arg, "--type="))
+			val := strings.TrimPrefix(arg, "--type=")
+			switch strings.ToLower(val) {
+			case "file", "folder":
+				argsMap.Type = MatchType(val)
+			default:
+				out.ExitError(fmt.Sprintf("Invalid value for --type: '%s' (expected 'file' or 'folder')", val))
+			}
+
 		default:
 			out.ExitError("Unknown flag: " + arg)
 		}
