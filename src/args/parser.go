@@ -164,10 +164,31 @@ type ArgsMap struct {
 // Parses the args
 func Parse() *ArgsMap {
 	argMap := &ArgsMap{
-		Type:  "file",
-		Lines: 10,
-		Depth: 0,
-		Limit: 0,
+		Type:           "file",
+		Lines:          10,
+		Depth:          0,
+		Limit:          0,
+		Preview:        false,
+		Partial:        false,
+		IgnoreCase:     false,
+		Open:           false,
+		OpenWith:       "notepad.exe",
+		Ext:            []string{},
+		ExcludeExt:     []string{},
+		ExcludeDir:     []string{},
+		MinSize:        0,
+		MaxSize:        0,
+		MinSizeFormat:  "B",
+		MaxSizeFormat:  "B",
+		ModifiedBefore: time.Now().Format("2006-01-02"),
+		ModifiedAfter:  time.Now().Format("2006-01-02"),
+		Hidden:         false,
+		Count:          false,
+		Stats:          false,
+		Regex:          false,
+		Debug:          false,
+		Path:           "./",
+		Term:           "test",
 	}
 	setArgsMapValues(argMap)
 
@@ -237,16 +258,6 @@ func validateArgsMap(argsMap *ArgsMap) error {
 		if _, err := regexp.Compile(argsMap.Term); err != nil {
 			return fmt.Errorf("invalid regex term: %v", err)
 		}
-	}
-
-	if argsMap.Lines > 0 && !argsMap.Preview {
-		return errors.New("--lines flag requires --preview flag to be set")
-	}
-	if argsMap.OpenWith != "" && !argsMap.Open {
-		return errors.New("--open-with flag requires --open flag to be set")
-	}
-	if argsMap.MaxSize > 0 && argsMap.MinSize > 0 && argsMap.MaxSize < argsMap.MinSize && argsMap.MinSizeFormat == argsMap.MaxSizeFormat {
-		return errors.New("--max-size cannot be less than --min-size")
 	}
 
 	argsMap.Ext = cleanStringSlice(argsMap.Ext)
