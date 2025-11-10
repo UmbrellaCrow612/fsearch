@@ -35,7 +35,7 @@ func Run(argsMap *args.ArgsMap) {
 	if argsMap.Type == "file" {
 
 		// read files pass argmap
-		files, err := readFilesParallel(argsMap.Path, argsMap, searchTermRegex)
+		_, err := readFilesParallel(argsMap.Path, argsMap, searchTermRegex)
 		if err != nil {
 			out.ExitError(err.Error())
 		}

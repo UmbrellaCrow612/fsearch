@@ -33,8 +33,9 @@ fsearch <search-term> [flags] <path>
 | `--ext`             | string[] | List of file extensions to include (comma-separated)                         | all            | `fsearch config --ext=txt,md,log ./`                         |
 | `--exclude-ext`     | string[] | List of file extensions to exclude (comma-separated)                         | none           | `fsearch backup --exclude-ext=tmp,bak ./`                    |
 | `--exclude-dir`     | string[] | List of directories to exclude (comma-separated)                             | none           | `fsearch index --partial --exclude-dir=node_modules,.git ./` |
-| `--min-size`        | string   | Minimum file size (supports KB, MB, GB)                                      | none           | `fsearch report --min-size=1MB ./documents`                  |
-| `--max-size`        | string   | Maximum file size (supports KB, MB, GB)                                      | none           | `fsearch config --max-size=10MB ./`                          |
+| `--min-size`        | string   | Minimum file size                                                            | none           | `fsearch report --min-size=1 ./documents`                    |
+| `--max-size`        | string   | Maximum file size                                                            | none           | `fsearch config --max-size=10 ./`                            |
+| `--size-type`       | string   | The type format used in size comparisons                                     | KB             | `fsearch config --max-size=10 --size-type=MB ./`             |
 | `--modified-before` | string   | Include files modified before date (`YYYY-MM-DD`)                            | none           | `fsearch log --modified-before=2024-01-01 ./logs`            |
 | `--modified-after`  | string   | Include files modified after date (`YYYY-MM-DD`)                             | none           | `fsearch report --modified-after=2024-06-01 ./`              |
 | `--hidden`          | boolean  | Include hidden files and folders in search                                   | false          | `fsearch config --hidden ./`                                 |
