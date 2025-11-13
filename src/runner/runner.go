@@ -178,6 +178,10 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 					continue
 				}
 
+				if slices.Contains(argsMap.ExcludeDir, entry.Name()) {
+					continue
+				}
+
 				if maxDepth <= 0 || depth-rootDepth < maxDepth {
 					wg.Add(1)
 					go read(fullPath, depth+1)
