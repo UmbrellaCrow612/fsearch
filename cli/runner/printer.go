@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/UmbrellaCrow612/fsearch/args"
-	"github.com/UmbrellaCrow612/fsearch/out"
-	"github.com/UmbrellaCrow612/fsearch/shared"
+	"github.com/UmbrellaCrow612/fsearch/cli/args"
+	"github.com/UmbrellaCrow612/fsearch/cli/out"
+	"github.com/UmbrellaCrow612/fsearch/cli/shared"
 )
 
 func printMatchs(m []shared.MatchEntry, argMap *args.ArgsMap) {

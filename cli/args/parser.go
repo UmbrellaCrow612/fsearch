@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UmbrellaCrow612/fsearch/out"
+	"github.com/UmbrellaCrow612/fsearch/cli/out"
 )
 
 // Parses the args

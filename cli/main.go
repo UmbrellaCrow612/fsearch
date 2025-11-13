@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/UmbrellaCrow612/fsearch/args"
-	"github.com/UmbrellaCrow612/fsearch/runner"
+	"github.com/UmbrellaCrow612/fsearch/cli/args"
+	"github.com/UmbrellaCrow612/fsearch/cli/runner"
 )
 
 func main() {

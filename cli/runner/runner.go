@@ -13,10 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/UmbrellaCrow612/fsearch/args"
-	"github.com/UmbrellaCrow612/fsearch/out"
-	"github.com/UmbrellaCrow612/fsearch/shared"
-	"github.com/UmbrellaCrow612/fsearch/utils"
+	"github.com/UmbrellaCrow612/fsearch/cli/args"
+	"github.com/UmbrellaCrow612/fsearch/cli/out"
+	"github.com/UmbrellaCrow612/fsearch/cli/shared"
+	"github.com/UmbrellaCrow612/fsearch/cli/utils"
 )
 
 // Runs the main loop and logic
