@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/UmbrellaCrow612/fsearch/src/args"
@@ -36,15 +37,14 @@ func Run(argsMap *args.ArgsMap) {
 	}
 
 	if argsMap.Type == "file" {
-		// read files pass argmap
-		_, err := readFilesParallel(argsMap.Path, argsMap, searchTermRegex)
+		files, err := readFilesParallel(argsMap.Path, argsMap, searchTermRegex)
 		if err != nil {
 			out.ExitError(err.Error())
 		}
-		// collect based on flags
-		// get collection
-		// apply addiotnal flags
-		// print end
+
+		for _, file := range files {
+			out.WriteToStdout(file.Path)
+		}
 	}
 }
 
@@ -66,7 +66,6 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 
 	var modifiedBefore, modifiedAfter *time.Time
 
-	// --- Parse date filters ---
 	if argsMap.ModifiedBefore != "" && argsMap.ModifiedBefore != "Empty" {
 		if t, err := time.Parse("2006-01-02", argsMap.ModifiedBefore); err == nil {
 			modifiedBefore = &t
@@ -78,7 +77,6 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 		}
 	}
 
-	// --- Convert size filters to bytes ---
 	var sizeMultiplier int64 = 1
 	switch strings.ToUpper(argsMap.SizeType) {
 	case "KB":
@@ -126,21 +124,39 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 			}
 		}
 		if hasIncludeExts {
-			for _, inc := range includeExts {
-				if ext == inc {
-					return true
-				}
-			}
-			return false 
+			return slices.Contains(includeExts, ext)
 		}
-		return true 
+		return true
 	}
 
-	var read func(string)
-	read = func(path string) {
+	maxDepth := argsMap.Depth
+	if maxDepth <= 0 {
+		maxDepth = -1 // no limit
+	}
+
+	rootDepth := len(strings.Split(filepath.Clean(root), string(os.PathSeparator)))
+
+	limit := argsMap.Limit
+	if limit <= 0 {
+		limit = -1 // no limit
+	}
+	var reachedLimit atomic.Bool
+
+	var read func(string, int)
+	read = func(path string, depth int) {
+		// Stop if global limit reached
+		if limit > 0 && reachedLimit.Load() {
+			return
+		}
+
 		sem <- struct{}{}
 		defer func() { <-sem }()
 		defer wg.Done()
+
+		// Stop if max depth reached
+		if maxDepth > 0 && depth-rootDepth > maxDepth {
+			return
+		}
 
 		list, err := os.ReadDir(path)
 		if err != nil {
@@ -151,11 +167,21 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 		}
 
 		for _, entry := range list {
+			if limit > 0 && reachedLimit.Load() {
+				return
+			}
+
 			fullPath := filepath.Join(path, entry.Name())
 
 			if entry.IsDir() {
-				wg.Add(1)
-				go read(fullPath)
+				if !argsMap.Hidden && utils.IsHiddenFolderName(entry.Name()) {
+					continue
+				}
+
+				if maxDepth <= 0 || depth-rootDepth < maxDepth {
+					wg.Add(1)
+					go read(fullPath, depth+1)
+				}
 				continue
 			}
 
@@ -192,14 +218,24 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 				continue
 			}
 
+			if !searchTermRegex.MatchString(fullPath) {
+				continue
+			}
+
+			// --- Add file if limit not reached ---
 			mu.Lock()
+			if limit > 0 && len(files) >= limit {
+				mu.Unlock()
+				reachedLimit.Store(true)
+				return
+			}
 			files = append(files, fileEntry{Path: fullPath, Entry: entry})
 			mu.Unlock()
 		}
 	}
 
 	wg.Add(1)
-	go read(root)
+	go read(root, rootDepth)
 	wg.Wait()
 
 	if len(errs) > 0 {
