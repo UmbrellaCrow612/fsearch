@@ -3,7 +3,6 @@ package args
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,35 +31,6 @@ func validateArgsMap(argsMap *ArgsMap) {
 	}
 	argsMap.Path = absPath
 	// --- End validate path ---
-
-	// --- Validate open-with ---
-	if isEmptyOrWhitespace(argsMap.OpenWith) {
-		out.ExitError("Open with cannot be empty or whitespace")
-	}
-
-	validViewers := GetValidViewersForOS()
-
-	found := false
-	for _, viewer := range validViewers {
-		if strings.EqualFold(viewer, argsMap.OpenWith) {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		if _, err := exec.LookPath(argsMap.OpenWith); err == nil {
-			found = true
-		}
-	}
-
-	if !found {
-		out.ExitError(fmt.Sprintf(
-			"Invalid program for --open-with: '%s'\nValid options for your OS include: %s",
-			argsMap.OpenWith, strings.Join(validViewers, ", "),
-		))
-	}
-	// --- End validate open-with ---
 
 	// --- Validate lines ---
 	if argsMap.Lines < 1 {

@@ -25,7 +25,6 @@ fsearch <search-term> [flags] <path>
 | `--partial`         | boolean  | Match files whose names contain the search term                              | false          | `fsearch doc --partial ./src`                                |
 | `--ignore-case`     | boolean  | Perform a case-insensitive search                                            | false          | `fsearch README --ignore-case ./`                            |
 | `--open`            | boolean  | Open the first matched file in the system’s default program                  | false          | `fsearch config.txt --open ./`                               |
-| `--open-with`       | string   | Specify a program executable to open the file with                           | system default | `fsearch app.js --open-with=code.exe ./src`                  |
 | `--preview`         | boolean  | Display a preview of file contents                                           | false          | `fsearch log.txt --preview ./logs`                           |
 | `--lines`           | integer  | Number of lines to show in preview (requires `--preview`)                    | 10             | `fsearch data.csv --preview --lines=20 ./`                   |
 | `--limit`           | integer  | Maximum number of matches to return                                          | unlimited      | `fsearch test --partial --limit=5 ./`                        |

@@ -11,9 +11,6 @@ type ArgsMap struct {
 	// If the first match should be opened in a file explorer or text editor.
 	Open bool
 
-	// The exe to open the folder or file with.
-	OpenWith string
-
 	// If it should show a preview.
 	Preview bool
 

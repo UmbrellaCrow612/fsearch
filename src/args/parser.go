@@ -20,7 +20,6 @@ func Parse() *ArgsMap {
 		Partial:        false,
 		IgnoreCase:     false,
 		Open:           false,
-		OpenWith:       "notepad.exe",
 		Ext:            []string{},
 		ExcludeExt:     []string{},
 		ExcludeDir:     []string{},
@@ -76,8 +75,6 @@ func setArgsMapValues(argsMap *ArgsMap) {
 			argsMap.IgnoreCase = true
 		case arg == "--open":
 			argsMap.Open = true
-		case strings.HasPrefix(arg, "--open-with="):
-			argsMap.OpenWith = strings.TrimPrefix(arg, "--open-with=")
 		case arg == "--preview":
 			argsMap.Preview = true
 

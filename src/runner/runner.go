@@ -42,9 +42,12 @@ func Run(argsMap *args.ArgsMap) {
 		out.ExitError(err.Error())
 	}
 
-	// open first
 	if argsMap.Open && len(matches) > 0 {
-		utils.OpenMatchEntry(matches[0])
+		err := utils.OpenMatchEntry(matches[0])
+		if err != nil {
+			out.ExitError(err.Error())
+		}
+
 		out.ExitSuccess()
 	}
 }
