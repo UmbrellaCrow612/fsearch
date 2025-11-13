@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UmbrellaCrow612/fsearch/src/out"
+	"github.com/UmbrellaCrow612/fsearch/out"
 )
 
 // Validate args map values

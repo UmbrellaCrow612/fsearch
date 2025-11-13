@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/UmbrellaCrow612/fsearch/src/args"
-	"github.com/UmbrellaCrow612/fsearch/src/shared"
+	"github.com/UmbrellaCrow612/fsearch/args"
+	"github.com/UmbrellaCrow612/fsearch/shared"
 )
 
 func OpenMatchEntry(entry shared.MatchEntry) error {

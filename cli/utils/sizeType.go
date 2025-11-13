@@ -3,7 +3,7 @@ package utils
 import (
 	"strings"
 
-	"github.com/UmbrellaCrow612/fsearch/src/args"
+	"github.com/UmbrellaCrow612/fsearch/args"
 )
 
 func GetSizeMultipler(argsMap *args.ArgsMap) int64 {
