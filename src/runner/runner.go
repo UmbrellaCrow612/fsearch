@@ -36,28 +36,27 @@ func Run(argsMap *args.ArgsMap) {
 		searchTermRegex = regex
 	}
 
-	if argsMap.Type == "file" {
-		files, err := readFilesParallel(argsMap.Path, argsMap, searchTermRegex)
-		if err != nil {
-			out.ExitError(err.Error())
-		}
+	matches, err := readInParallel(argsMap.Path, argsMap, searchTermRegex)
+	if err != nil {
+		out.ExitError(err.Error())
+	}
 
-		for _, file := range files {
-			out.WriteToStdout(file.Path)
-		}
+	for _, match := range matches {
+		out.WriteToStdout(match.Entry.Name() + match.Path)
 	}
 }
 
 const maxWorkers = 10
 
-type fileEntry struct {
+// Represents a match either file or folder and it's info
+type matchEntry struct {
 	Path  string
 	Entry os.DirEntry
 }
 
-// Reads all *files* in a directory tree in parallel
-func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.Regexp) ([]fileEntry, error) {
-	var files []fileEntry
+// Reads in a directory tree in parallel
+func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.Regexp) ([]matchEntry, error) {
+	var matchEntrys []matchEntry
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var errs []error
@@ -77,19 +76,7 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 		}
 	}
 
-	var sizeMultiplier int64 = 1
-	switch strings.ToUpper(argsMap.SizeType) {
-	case "KB":
-		sizeMultiplier = 1024
-	case "MB":
-		sizeMultiplier = 1024 * 1024
-	case "GB":
-		sizeMultiplier = 1024 * 1024 * 1024
-	case "B", "":
-		sizeMultiplier = 1
-	default:
-		sizeMultiplier = 1
-	}
+	sizeMultiplier := utils.GetSizeMultipler(argsMap)
 
 	minSizeBytes := argsMap.MinSize * sizeMultiplier
 	maxSizeBytes := argsMap.MaxSize * sizeMultiplier
@@ -142,9 +129,8 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 	}
 	var reachedLimit atomic.Bool
 
-	var read func(string, int)
-	read = func(path string, depth int) {
-		// Stop if global limit reached
+	var read func(string, int, bool)
+	read = func(path string, depth int, dirsOnly bool) {
 		if limit > 0 && reachedLimit.Load() {
 			return
 		}
@@ -153,7 +139,6 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 		defer func() { <-sem }()
 		defer wg.Done()
 
-		// Stop if max depth reached
 		if maxDepth > 0 && depth-rootDepth > maxDepth {
 			return
 		}
@@ -182,11 +167,30 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 					continue
 				}
 
+				if dirsOnly {
+					if searchTermRegex.MatchString(entry.Name()) {
+						mu.Lock()
+						if limit > 0 && len(matchEntrys) >= limit {
+							mu.Unlock()
+							reachedLimit.Store(true)
+							return
+						}
+						matchEntrys = append(matchEntrys, matchEntry{Path: fullPath, Entry: entry})
+						mu.Unlock()
+					}
+
+				}
+
 				if maxDepth <= 0 || depth-rootDepth < maxDepth {
 					wg.Add(1)
-					go read(fullPath, depth+1)
+					go read(fullPath, depth+1, dirsOnly)
 				}
-				continue
+
+				continue // Skip file-processing logic
+			}
+
+			if dirsOnly {
+				continue // If we only want directories, skip all file logic
 			}
 
 			info, err := entry.Info()
@@ -228,22 +232,22 @@ func readFilesParallel(root string, argsMap *args.ArgsMap, searchTermRegex *rege
 
 			// --- Add file if limit not reached ---
 			mu.Lock()
-			if limit > 0 && len(files) >= limit {
+			if limit > 0 && len(matchEntrys) >= limit {
 				mu.Unlock()
 				reachedLimit.Store(true)
 				return
 			}
-			files = append(files, fileEntry{Path: fullPath, Entry: entry})
+			matchEntrys = append(matchEntrys, matchEntry{Path: fullPath, Entry: entry})
 			mu.Unlock()
 		}
 	}
 
 	wg.Add(1)
-	go read(root, rootDepth)
+	go read(root, rootDepth, argsMap.Type == "folder")
 	wg.Wait()
 
 	if len(errs) > 0 {
-		return files, errors.Join(errs...)
+		return matchEntrys, errors.Join(errs...)
 	}
-	return files, nil
+	return matchEntrys, nil
 }
