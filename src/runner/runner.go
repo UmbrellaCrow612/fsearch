@@ -14,6 +14,7 @@ import (
 
 	"github.com/UmbrellaCrow612/fsearch/src/args"
 	"github.com/UmbrellaCrow612/fsearch/src/out"
+	"github.com/UmbrellaCrow612/fsearch/src/shared"
 	"github.com/UmbrellaCrow612/fsearch/src/utils"
 )
 
@@ -41,22 +42,18 @@ func Run(argsMap *args.ArgsMap) {
 		out.ExitError(err.Error())
 	}
 
-	for _, match := range matches {
-		out.WriteToStdout(match.Entry.Name() + match.Path)
+	// open first
+	if argsMap.Open && len(matches) > 0 {
+		utils.OpenMatchEntry(matches[0])
+		out.ExitSuccess()
 	}
 }
 
 const maxWorkers = 10
 
-// Represents a match either file or folder and it's info
-type matchEntry struct {
-	Path  string
-	Entry os.DirEntry
-}
-
 // Reads in a directory tree in parallel
-func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.Regexp) ([]matchEntry, error) {
-	var matchEntrys []matchEntry
+func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.Regexp) ([]shared.MatchEntry, error) {
+	var matchEntrys []shared.MatchEntry
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var errs []error
@@ -175,7 +172,7 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 							reachedLimit.Store(true)
 							return
 						}
-						matchEntrys = append(matchEntrys, matchEntry{Path: fullPath, Entry: entry})
+						matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
 						mu.Unlock()
 					}
 
@@ -237,7 +234,7 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 				reachedLimit.Store(true)
 				return
 			}
-			matchEntrys = append(matchEntrys, matchEntry{Path: fullPath, Entry: entry})
+			matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
 			mu.Unlock()
 		}
 	}

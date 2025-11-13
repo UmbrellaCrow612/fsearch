@@ -38,7 +38,7 @@ func validateArgsMap(argsMap *ArgsMap) {
 		out.ExitError("Open with cannot be empty or whitespace")
 	}
 
-	validViewers := getValidViewersForOS()
+	validViewers := GetValidViewersForOS()
 
 	found := false
 	for _, viewer := range validViewers {

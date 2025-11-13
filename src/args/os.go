@@ -2,7 +2,7 @@ package args
 
 import "runtime"
 
-func getValidViewersForOS() []string {
+func GetValidViewersForOS() []string {
 	switch runtime.GOOS {
 	case "windows":
 		return []string{
@@ -18,5 +18,18 @@ func getValidViewersForOS() []string {
 		}
 	default:
 		return []string{"code", "vim", "nano", "less", "more"}
+	}
+}
+
+func GetFileExplorerForOS() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "explorer"
+	case "darwin":
+		return "open"
+	case "linux":
+		return "xdg-open"
+	default:
+		return "xdg-open"
 	}
 }
