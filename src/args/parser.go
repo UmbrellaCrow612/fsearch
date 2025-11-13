@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/UmbrellaCrow612/fsearch/src/out"
 )
@@ -27,8 +26,8 @@ func Parse() *ArgsMap {
 		ExcludeDir:     []string{},
 		MinSize:        0,
 		MaxSize:        0,
-		ModifiedBefore: time.Now().Format("2006-01-02"),
-		ModifiedAfter:  time.Now().Format("2006-01-02"),
+		ModifiedBefore: "Empty",
+		ModifiedAfter:  "Empty",
 		Hidden:         false,
 		Count:          false,
 		Stats:          false,
@@ -40,10 +39,7 @@ func Parse() *ArgsMap {
 	}
 	setArgsMapValues(argMap)
 
-	err := validateArgsMap(argMap)
-	if err != nil {
-		out.ExitError(err.Error())
-	}
+	validateArgsMap(argMap)
 
 	if argMap.Debug {
 		printArgsMapValues(argMap)
@@ -138,7 +134,6 @@ func setArgsMapValues(argsMap *ArgsMap) {
 			val := strings.ToUpper(strings.TrimPrefix(arg, "--size-type="))
 			argsMap.SizeType = val
 
-		
 		case strings.HasPrefix(arg, "--modified-before="):
 			val := strings.TrimPrefix(arg, "--modified-before=")
 			if !isValidDate(val) {

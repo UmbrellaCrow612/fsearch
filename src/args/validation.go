@@ -11,8 +11,8 @@ import (
 	"github.com/UmbrellaCrow612/fsearch/src/out"
 )
 
-// validateArgsMap checks the parsed args for invalid combinations or values.
-func validateArgsMap(argsMap *ArgsMap) error {
+// Validate args map values
+func validateArgsMap(argsMap *ArgsMap) {
 	// --- Validate path ---
 	if isEmptyOrWhitespace(argsMap.Path) {
 		out.ExitError("Path cannot be empty or whitespace")
@@ -115,7 +115,38 @@ func validateArgsMap(argsMap *ArgsMap) error {
 	}
 	// --- End Validation SizeType ---
 
-	return nil
+	// --- Validation ModifiedBefore ---
+	if !isValidDate(argsMap.ModifiedBefore) {
+		out.ExitError("ModifiedBefore must be a valid DATE string (YYYY-MM-DD)")
+	}
+	// --- Validation ModifiedBefore End ---
+
+	// --- Validation ModifiedAfter ---
+	if !isValidDate(argsMap.ModifiedAfter) {
+		out.ExitError("ModifiedAfter must be a valid DATE string (YYYY-MM-DD)")
+	}
+	// --- Validation ModifiedAfter End ---
+
+	// --- Validation Type ---
+	if !isValidType(argsMap.Type) {
+		out.ExitError("Type must be either file or folder")
+	}
+	// --- Validation Type End---
+
+	// --- Validation Term ---
+	if isEmptyOrWhitespace(argsMap.Term) {
+		out.ExitError("Term cannot be empty")
+	}
+	// --- Validation Term End---
+}
+
+// Checks if a string is a valid argmap type either "file" or "folder"
+func isValidType(str string) bool {
+	if str == "file" || str == "folder" {
+		return true
+	} else {
+		return false
+	}
 }
 
 // checks if a string is empty
@@ -125,6 +156,10 @@ func isEmptyOrWhitespace(s string) bool {
 
 // isValidDate checks if a string is a valid YYYY-MM-DD date.
 func isValidDate(dateStr string) bool {
+	if dateStr == "Empty" {
+		return true
+	}
+
 	_, err := time.Parse("2006-01-02", dateStr)
 	return err == nil
 }

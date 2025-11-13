@@ -44,10 +44,10 @@ type ArgsMap struct {
 	// A string of the type used for min max sizes either B KB MB or GB
 	SizeType string
 
-	// When the match can be modified before (date format: YYYY-MM-DD).
+	// When the match can be modified before (date format: YYYY-MM-DD) or the string Empty for none values.
 	ModifiedBefore string
 
-	// When the match can be modified after (date format: YYYY-MM-DD).
+	// When the match can be modified after (date format: YYYY-MM-DD) or the string Empty for none values.
 	ModifiedAfter string
 
 	// If it should match hidden files or folders (those starting with `.`).
