@@ -2,11 +2,11 @@ package runner
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/UmbrellaCrow612/fsearch/src/args"
+	"github.com/UmbrellaCrow612/fsearch/src/out"
 	"github.com/UmbrellaCrow612/fsearch/src/shared"
 )
 
@@ -18,13 +18,13 @@ func printMatchs(m []shared.MatchEntry, argMap *args.ArgsMap) {
 		if argMap.Lines > 0 && strings.ToLower(argMap.Type) == "file" && !i.Entry.IsDir() {
 			contentPreview, err := readFirstNLines(i.Path, argMap.Lines)
 			if err != nil {
-				fmt.Printf("%s ERROR reading file: %v\n", nameAndPath, err)
+				out.WriteToStderr(nameAndPath + " ERROR reading file: " + err.Error())
 				continue
 			}
 			// Print name + path, then content separated by a newline
-			fmt.Printf("%s\n%s\n", nameAndPath, contentPreview)
+			out.WriteToStdout(nameAndPath + "\n" + contentPreview)
 		} else {
-			fmt.Println(nameAndPath)
+			out.WriteToStdout(nameAndPath)
 		}
 	}
 }
