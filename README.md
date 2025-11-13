@@ -20,29 +20,27 @@ fsearch <search-term> [flags] <path>
 
 ## ⚙️ API Reference
 
-| Flag                | Type     | Description                                                                  | Default        | Example                                                      |
-| ------------------- | -------- | ---------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------ |
-| `--partial`         | boolean  | Match files whose names contain the search term                              | false          | `fsearch doc --partial ./src`                                |
-| `--ignore-case`     | boolean  | Perform a case-insensitive search                                            | false          | `fsearch README --ignore-case ./`                            |
-| `--open`            | boolean  | Open the first matched file in the system’s default program                  | false          | `fsearch config.txt --open ./`                               |
-| `--preview`         | boolean  | Display a preview of file contents                                           | false          | `fsearch log.txt --preview ./logs`                           |
-| `--lines`           | integer  | Number of lines to show in preview (requires `--preview`)                    | 10             | `fsearch data.csv --preview --lines=20 ./`                   |
-| `--limit`           | integer  | Maximum number of matches to return                                          | unlimited      | `fsearch test --partial --limit=5 ./`                        |
-| `--depth`           | integer  | Maximum folder depth to search                                               | unlimited      | `fsearch index --partial --depth=3 ./src`                    |
-| `--ext`             | string[] | List of file extensions to include (comma-separated)                         | all            | `fsearch config --ext=txt,md,log ./`                         |
-| `--exclude-ext`     | string[] | List of file extensions to exclude (comma-separated)                         | none           | `fsearch backup --exclude-ext=tmp,bak ./`                    |
-| `--exclude-dir`     | string[] | List of directories to exclude (comma-separated)                             | none           | `fsearch index --partial --exclude-dir=node_modules,.git ./` |
-| `--min-size`        | string   | Minimum file size                                                            | none           | `fsearch report --min-size=1 ./documents`                    |
-| `--max-size`        | string   | Maximum file size                                                            | none           | `fsearch config --max-size=10 ./`                            |
-| `--size-type`       | string   | The type format used in size comparisons                                     | KB             | `fsearch config --max-size=10 --size-type=MB ./`             |
-| `--modified-before` | string   | Include files modified before date (`YYYY-MM-DD`)                            | none           | `fsearch log --modified-before=2024-01-01 ./logs`            |
-| `--modified-after`  | string   | Include files modified after date (`YYYY-MM-DD`)                             | none           | `fsearch report --modified-after=2024-06-01 ./`              |
-| `--hidden`          | boolean  | Include hidden files and folders in search                                   | false          | `fsearch config --hidden ./`                                 |
-| `--count`           | boolean  | Display only the count of matches (no file details)                          | false          | `fsearch logs --count --partial ./`                          |
-| `--stats`           | boolean  | Show search statistics (total files scanned, time taken, etc.)               | false          | `fsearch doc --partial --stats ./`                           |
-| `--regex`           | boolean  | Treat the search term as a regular expression pattern                        | false          | `fsearch "^[A-Z].*\\.js$" --regex ./src`                     |
-| `--debug`           | boolean  | Show all passed flag values and environment info without performing a search | false          | `fsearch doc --debug ./`                                     |
-| `--type`            | string   | Type of item to search for — either `file` or `folder`                       | file           | `fsearch config --type=folder ./`                            |
+| Flag                | Type     | Description                                                                         | Default   | Example                                                      |
+| ------------------- | -------- | ----------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------ |
+| `--partial`         | boolean  | Match files whose names contain the search term                                     | false     | `fsearch doc --partial ./src`                                |
+| `--ignore-case`     | boolean  | Perform a case-insensitive search                                                   | false     | `fsearch README --ignore-case ./`                            |
+| `--open`            | boolean  | Open the first matched file in the system’s default program                         | false     | `fsearch config.txt --open ./`                               |
+| `--lines`           | integer  | Number of lines to show in preview if type is `file` and number is greater than `0` | 10        | `fsearch data.csv --preview --lines=20 ./`                   |
+| `--limit`           | integer  | Maximum number of matches to return                                                 | unlimited | `fsearch test --partial --limit=5 ./`                        |
+| `--depth`           | integer  | Maximum folder depth to search                                                      | unlimited | `fsearch index --partial --depth=3 ./src`                    |
+| `--ext`             | string[] | List of file extensions to include (comma-separated)                                | all       | `fsearch config --ext=txt,md,log ./`                         |
+| `--exclude-ext`     | string[] | List of file extensions to exclude (comma-separated)                                | none      | `fsearch backup --exclude-ext=tmp,bak ./`                    |
+| `--exclude-dir`     | string[] | List of directories to exclude (comma-separated)                                    | none      | `fsearch index --partial --exclude-dir=node_modules,.git ./` |
+| `--min-size`        | string   | Minimum file size                                                                   | none      | `fsearch report --min-size=1 ./documents`                    |
+| `--max-size`        | string   | Maximum file size                                                                   | none      | `fsearch config --max-size=10 ./`                            |
+| `--size-type`       | string   | The type format used in size comparisons                                            | KB        | `fsearch config --max-size=10 --size-type=MB ./`             |
+| `--modified-before` | string   | Include files modified before date (`YYYY-MM-DD`)                                   | none      | `fsearch log --modified-before=2024-01-01 ./logs`            |
+| `--modified-after`  | string   | Include files modified after date (`YYYY-MM-DD`)                                    | none      | `fsearch report --modified-after=2024-06-01 ./`              |
+| `--hidden`          | boolean  | Include hidden files and folders in search                                          | false     | `fsearch config --hidden ./`                                 |
+| `--count`           | boolean  | Display only the count of matches (no file details)                                 | false     | `fsearch logs --count --partial ./`                          |
+| `--regex`           | boolean  | Treat the search term as a regular expression pattern                               | false     | `fsearch "^[A-Z].*\\.js$" --regex ./src`                     |
+| `--debug`           | boolean  | Show all passed flag values and environment info without performing a search        | false     | `fsearch doc --debug ./`                                     |
+| `--type`            | string   | Type of item to search for — either `file` or `folder`                              | file      | `fsearch config --type=folder ./`                            |
 
 ---
 
@@ -74,7 +72,7 @@ fsearch notes --ignore-case --ext=txt,md ./docs
 fsearch logs --count ./logs
 
 # Preview first 20 lines of each match
-fsearch data --preview --lines=20 ./exports
+fsearch data --lines=20 ./exports
 
 # Search only for folders with "config" in the name
 fsearch config --type=folder ./src

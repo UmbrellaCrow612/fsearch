@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -50,6 +51,16 @@ func Run(argsMap *args.ArgsMap) {
 
 		out.ExitSuccess()
 	}
+
+	if argsMap.Count {
+		out.WriteToStdout(strconv.Itoa(len(matches)))
+		out.ExitSuccess()
+	}
+
+	printMatchs(matches, argsMap)
+	out.ExitSuccess()
+
+	out.ExitSuccess()
 }
 
 const maxWorkers = 10

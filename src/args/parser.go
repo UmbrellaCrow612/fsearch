@@ -13,7 +13,7 @@ import (
 func Parse() *ArgsMap {
 	argMap := &ArgsMap{
 		Type:           "file",
-		Lines:          10,
+		Lines:          0,
 		Depth:          0,
 		Limit:          0,
 		Preview:        false,
@@ -29,7 +29,6 @@ func Parse() *ArgsMap {
 		ModifiedAfter:  "Empty",
 		Hidden:         false,
 		Count:          false,
-		Stats:          false,
 		Regex:          false,
 		Debug:          false,
 		Path:           "./",
@@ -149,8 +148,6 @@ func setArgsMapValues(argsMap *ArgsMap) {
 			argsMap.Hidden = true
 		case arg == "--count":
 			argsMap.Count = true
-		case arg == "--stats":
-			argsMap.Stats = true
 		case arg == "--regex":
 			argsMap.Regex = true
 		case arg == "--debug":

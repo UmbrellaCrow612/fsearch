@@ -33,7 +33,7 @@ func validateArgsMap(argsMap *ArgsMap) {
 	// --- End validate path ---
 
 	// --- Validate lines ---
-	if argsMap.Lines < 1 {
+	if argsMap.Lines < 0 {
 		out.ExitError("Lines cannot be below zero or zero")
 	}
 	// --- End Validate lines ---

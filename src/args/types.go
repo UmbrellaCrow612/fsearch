@@ -53,9 +53,6 @@ type ArgsMap struct {
 	// If it should just output the count of matches.
 	Count bool
 
-	// If it should print a stats list.
-	Stats bool
-
 	// If the term should be treated as a regex pattern.
 	Regex bool
 
