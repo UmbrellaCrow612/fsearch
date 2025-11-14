@@ -58,15 +58,13 @@ func Run(argsMap *args.ArgsMap) {
 
 	printMatchs(matches, argsMap)
 	out.ExitSuccess()
-
-	out.ExitSuccess()
 }
 
 const maxWorkers = 10
 
 // Reads in a directory tree in parallel
 func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.Regexp) ([]shared.MatchEntry, error) {
-	var matchEntrys []shared.MatchEntry
+	var matchEntries []shared.MatchEntry
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var errs []error
@@ -86,13 +84,13 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 
 	var read func(string, int, bool)
 	read = func(path string, depth int, dirsOnly bool) {
-		if argsMap.Limit > 0 && reachedLimit.Load() {
-			return
-		}
-
 		sem <- struct{}{}
 		defer func() { <-sem }()
 		defer wg.Done()
+
+		if argsMap.Limit > 0 && reachedLimit.Load() {
+			return
+		}
 
 		if argsMap.Depth > 0 && depth-rootDepth > argsMap.Depth {
 			return
@@ -125,12 +123,12 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 				if dirsOnly {
 					if searchTermRegex.MatchString(entry.Name()) {
 						mu.Lock()
-						if argsMap.Limit > 0 && len(matchEntrys) >= argsMap.Limit {
+						if argsMap.Limit > 0 && len(matchEntries) >= argsMap.Limit {
 							mu.Unlock()
 							reachedLimit.Store(true)
 							return
 						}
-						matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
+						matchEntries = append(matchEntries, shared.MatchEntry{Path: fullPath, Entry: entry})
 						mu.Unlock()
 					}
 				}
@@ -191,13 +189,13 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 
 			// --- Add file if limit not reached ---
 			mu.Lock()
-			if argsMap.Limit > 0 && len(matchEntrys) >= argsMap.Limit {
+			if argsMap.Limit > 0 && len(matchEntries) >= argsMap.Limit {
 				mu.Unlock()
 				reachedLimit.Store(true)
 				return
 			}
 
-			matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
+			matchEntries = append(matchEntries, shared.MatchEntry{Path: fullPath, Entry: entry})
 			mu.Unlock()
 		}
 	}
@@ -207,7 +205,7 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 	wg.Wait()
 
 	if len(errs) > 0 {
-		return matchEntrys, errors.Join(errs...)
+		return matchEntries, errors.Join(errs...)
 	}
-	return matchEntrys, nil
+	return matchEntries, nil
 }
