@@ -137,7 +137,7 @@ func readDirectory(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.R
 		if argsMap.MaxSize > 0 && size > maxSizeBytes {
 			return nil
 		}
-		if !searchTermRegex.MatchString(fullPath) {
+		if !searchTermRegex.MatchString(name) {
 			return nil
 		}
 

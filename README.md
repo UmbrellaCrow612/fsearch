@@ -25,7 +25,7 @@ fsearch <search-term> [flags] <path>
 | `--partial`         | boolean  | Match files whose names contain the search term                                     | false     | `fsearch doc --partial ./src`                                |
 | `--ignore-case`     | boolean  | Perform a case-insensitive search                                                   | false     | `fsearch README --ignore-case ./`                            |
 | `--open`            | boolean  | Open the first matched file in the system’s default program                         | false     | `fsearch config.txt --open ./`                               |
-| `--lines`           | integer  | Number of lines to show in preview if type is `file` and number is greater than `0` | 10        | `fsearch data.csv --preview --lines=20 ./`                   |
+| `--lines`           | integer  | Number of lines to show in preview if type is `file` and number is greater than `0` | 10        | `fsearch data.csv --lines=20 ./`                   |
 | `--limit`           | integer  | Maximum number of matches to return                                                 | unlimited | `fsearch test --partial --limit=5 ./`                        |
 | `--depth`           | integer  | Maximum folder depth to search                                                      | unlimited | `fsearch index --partial --depth=3 ./src`                    |
 | `--ext`             | string[] | List of file extensions to include (comma-separated) without the `.`                | all       | `fsearch config --ext=txt,md,log ./`                         |
