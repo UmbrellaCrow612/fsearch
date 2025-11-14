@@ -14,13 +14,13 @@ type ArgsMap struct {
 	// If it should show a preview.
 	Preview bool
 
-	// Amount of lines to show from a file preview.
+	// Amount of lines to show from a file preview. Defaults to -1 means to show none
 	Lines int
 
-	// Number of items it will match before it will stop.
+	// Number of items it will match before it will stop. Defaults to -1 means to get as many as it can
 	Limit int
 
-	// How many folders deep it will go from the root path passed.
+	// How many folders deep it will go from the root path passed. Defaults to -1 means to go as deep as it can
 	Depth int
 
 	// List of extensions to match for.
@@ -32,10 +32,10 @@ type ArgsMap struct {
 	// List of folders to ignore.
 	ExcludeDir []string
 
-	// Min size the match needs to be, just the number passed.
+	// Min size the match needs to be, just the number passed. Defaults to -1 means no min size
 	MinSize int64
 
-	// Max size the match can be, just the number.
+	// Max size the match can be, just the number. Defaults to -1 means no max size
 	MaxSize int64
 
 	// A string of the type used for min max sizes either B KB MB or GB

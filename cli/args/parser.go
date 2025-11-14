@@ -13,9 +13,9 @@ import (
 func Parse() *ArgsMap {
 	argMap := &ArgsMap{
 		Type:           "file",
-		Lines:          0,
-		Depth:          0,
-		Limit:          0,
+		Lines:          -1,
+		Depth:          -1,
+		Limit:          -1,
 		Preview:        false,
 		Partial:        false,
 		IgnoreCase:     false,
@@ -23,8 +23,8 @@ func Parse() *ArgsMap {
 		Ext:            []string{},
 		ExcludeExt:     []string{},
 		ExcludeDir:     []string{},
-		MinSize:        0,
-		MaxSize:        0,
+		MinSize:        -1,
+		MaxSize:        -1,
 		ModifiedBefore: "Empty",
 		ModifiedAfter:  "Empty",
 		Hidden:         false,
@@ -80,24 +80,24 @@ func setArgsMapValues(argsMap *ArgsMap) {
 		case strings.HasPrefix(arg, "--lines="):
 			val := strings.TrimPrefix(arg, "--lines=")
 			lines, err := strconv.Atoi(val)
-			if err != nil || lines < 0 {
-				out.ExitError(fmt.Sprintf("Invalid value for --lines: '%s' (must be a positive integer)", val))
+			if err != nil {
+				out.ExitError("Failed to parse --lines value")
 			}
 			argsMap.Lines = lines
 
 		case strings.HasPrefix(arg, "--limit="):
 			val := strings.TrimPrefix(arg, "--limit=")
 			limit, err := strconv.Atoi(val)
-			if err != nil || limit <= 0 {
-				out.ExitError(fmt.Sprintf("Invalid value for --limit: '%s' (must be a positive integer)", val))
+			if err != nil {
+				out.ExitError("Failed to parse --limit value")
 			}
 			argsMap.Limit = limit
 
 		case strings.HasPrefix(arg, "--depth="):
 			val := strings.TrimPrefix(arg, "--depth=")
 			depth, err := strconv.Atoi(val)
-			if err != nil || depth < 0 {
-				out.ExitError(fmt.Sprintf("Invalid value for --depth: '%s' (must be a non-negative integer)", val))
+			if err != nil {
+				out.ExitError("Failed to parse --depth value")
 			}
 			argsMap.Depth = depth
 
@@ -113,16 +113,16 @@ func setArgsMapValues(argsMap *ArgsMap) {
 		case strings.HasPrefix(arg, "--min-size="):
 			val := strings.TrimPrefix(arg, "--min-size=")
 			size, err := strconv.ParseInt(val, 10, 64)
-			if err != nil || size < 0 {
-				out.ExitError(fmt.Sprintf("Invalid value for --min-size: '%s' (must be a non-negative integer)", val))
+			if err != nil {
+				out.ExitError("Failed to parse --min-size value")
 			}
 			argsMap.MinSize = size
 
 		case strings.HasPrefix(arg, "--max-size="):
 			val := strings.TrimPrefix(arg, "--max-size=")
 			size, err := strconv.ParseInt(val, 10, 64)
-			if err != nil || size < 0 {
-				out.ExitError(fmt.Sprintf("Invalid value for --max-size: '%s' (must be a non-negative integer)", val))
+			if err != nil {
+				out.ExitError("Failed to parse --max-size value")
 			}
 			argsMap.MaxSize = size
 

@@ -32,24 +32,6 @@ func validateArgsMap(argsMap *ArgsMap) {
 	argsMap.Path = absPath
 	// --- End validate path ---
 
-	// --- Validate lines ---
-	if argsMap.Lines < 0 {
-		out.ExitError("Lines cannot be below zero or zero")
-	}
-	// --- End Validate lines ---
-
-	// --- Validate limit ---
-	if argsMap.Limit < 0 {
-		out.ExitError("Limit cannot be below zero")
-	}
-	// --- End Validate limit ---
-
-	// --- Validate depth ---
-	if argsMap.Depth < 0 {
-		out.ExitError("Depth cannot be below zero")
-	}
-	// --- End Validate depth ---
-
 	// --- Validation Ext ---
 	filterEmptyStrings(&argsMap.Ext)
 	// --- End Validation Ext ---
@@ -61,18 +43,6 @@ func validateArgsMap(argsMap *ArgsMap) {
 	// --- Validation ExcludeDir ---
 	filterEmptyStrings(&argsMap.ExcludeDir)
 	// --- EndValidation ExcludeDir ---
-
-	// --- Validation MinSize ---
-	if argsMap.MinSize < 0 {
-		out.ExitError("Min size cannot be below zero")
-	}
-	// --- End Validation MinSize ---
-
-	// --- Validation MaxSize ---
-	if argsMap.MaxSize < 0 {
-		out.ExitError("Max size cannot be below zero")
-	}
-	// --- End Validation MaxSize ---
 
 	// --- Validation SizeType ---
 	if isEmptyOrWhitespace(argsMap.SizeType) {

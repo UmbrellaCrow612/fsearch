@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/UmbrellaCrow612/fsearch/cli/args"
 	"github.com/UmbrellaCrow612/fsearch/cli/out"
@@ -71,78 +70,23 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var errs []error
-	var errMu sync.Mutex
 	sem := make(chan struct{}, maxWorkers)
 
-	var modifiedBefore, modifiedAfter *time.Time
-
-	if argsMap.ModifiedBefore != "" && argsMap.ModifiedBefore != "Empty" {
-		if t, err := time.Parse("2006-01-02", argsMap.ModifiedBefore); err == nil {
-			modifiedBefore = &t
-		}
-	}
-	if argsMap.ModifiedAfter != "" && argsMap.ModifiedAfter != "Empty" {
-		if t, err := time.Parse("2006-01-02", argsMap.ModifiedAfter); err == nil {
-			modifiedAfter = &t
-		}
-	}
+	modifiedBefore := utils.GetTimeValue(argsMap.ModifiedBefore)
+	modifiedAfter := utils.GetTimeValue(argsMap.ModifiedAfter)
 
 	sizeMultiplier := utils.GetSizeMultipler(argsMap)
 
 	minSizeBytes := argsMap.MinSize * sizeMultiplier
 	maxSizeBytes := argsMap.MaxSize * sizeMultiplier
 
-	// --- Normalize extension filters ---
-	normalizeExt := func(exts []string) []string {
-		norm := make([]string, 0, len(exts))
-		for _, e := range exts {
-			e = strings.ToLower(strings.TrimSpace(e))
-			if e == "" {
-				continue
-			}
-			if !strings.HasPrefix(e, ".") {
-				e = "." + e
-			}
-			norm = append(norm, e)
-		}
-		return norm
-	}
-
-	includeExts := normalizeExt(argsMap.Ext)
-	excludeExts := normalizeExt(argsMap.ExcludeExt)
-
-	hasIncludeExts := len(includeExts) > 0
-	hasExcludeExts := len(excludeExts) > 0
-
-	shouldIncludeExt := func(ext string) bool {
-		ext = strings.ToLower(ext)
-		if hasExcludeExts {
-			if slices.Contains(excludeExts, ext) {
-				return false
-			}
-		}
-		if hasIncludeExts {
-			return slices.Contains(includeExts, ext)
-		}
-		return true
-	}
-
-	maxDepth := argsMap.Depth
-	if maxDepth <= 0 {
-		maxDepth = -1 // no limit
-	}
-
 	rootDepth := len(strings.Split(filepath.Clean(root), string(os.PathSeparator)))
 
-	limit := argsMap.Limit
-	if limit <= 0 {
-		limit = -1 // no limit
-	}
 	var reachedLimit atomic.Bool
 
 	var read func(string, int, bool)
 	read = func(path string, depth int, dirsOnly bool) {
-		if limit > 0 && reachedLimit.Load() {
+		if argsMap.Limit > 0 && reachedLimit.Load() {
 			return
 		}
 
@@ -150,20 +94,20 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 		defer func() { <-sem }()
 		defer wg.Done()
 
-		if maxDepth > 0 && depth-rootDepth > maxDepth {
+		if argsMap.Depth > 0 && depth-rootDepth > argsMap.Depth {
 			return
 		}
 
 		list, err := os.ReadDir(path)
 		if err != nil {
-			errMu.Lock()
+			mu.Lock()
 			errs = append(errs, fmt.Errorf("error reading %s: %w", path, err))
-			errMu.Unlock()
+			mu.Unlock()
 			return
 		}
 
 		for _, entry := range list {
-			if limit > 0 && reachedLimit.Load() {
+			if argsMap.Limit > 0 && reachedLimit.Load() {
 				return
 			}
 
@@ -181,7 +125,7 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 				if dirsOnly {
 					if searchTermRegex.MatchString(entry.Name()) {
 						mu.Lock()
-						if limit > 0 && len(matchEntrys) >= limit {
+						if argsMap.Limit > 0 && len(matchEntrys) >= argsMap.Limit {
 							mu.Unlock()
 							reachedLimit.Store(true)
 							return
@@ -189,10 +133,9 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 						matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
 						mu.Unlock()
 					}
-
 				}
 
-				if maxDepth <= 0 || depth-rootDepth < maxDepth {
+				if argsMap.Depth <= 0 || depth-rootDepth < argsMap.Depth {
 					wg.Add(1)
 					go read(fullPath, depth+1, dirsOnly)
 				}
@@ -206,9 +149,9 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 
 			info, err := entry.Info()
 			if err != nil {
-				errMu.Lock()
+				mu.Lock()
 				errs = append(errs, fmt.Errorf("error getting info for %s: %w", fullPath, err))
-				errMu.Unlock()
+				mu.Unlock()
 				continue
 			}
 
@@ -217,7 +160,10 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 			ext := strings.ToLower(filepath.Ext(entry.Name()))
 
 			// --- Extension filters ---
-			if !shouldIncludeExt(ext) {
+			if len(argsMap.ExcludeExt) > 0 && slices.Contains(argsMap.ExcludeExt, ext) {
+				continue
+			}
+			if len(argsMap.Ext) > 0 && !slices.Contains(argsMap.Ext, ext) {
 				continue
 			}
 
@@ -243,11 +189,12 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 
 			// --- Add file if limit not reached ---
 			mu.Lock()
-			if limit > 0 && len(matchEntrys) >= limit {
+			if argsMap.Limit > 0 && len(matchEntrys) >= argsMap.Limit {
 				mu.Unlock()
 				reachedLimit.Store(true)
 				return
 			}
+
 			matchEntrys = append(matchEntrys, shared.MatchEntry{Path: fullPath, Entry: entry})
 			mu.Unlock()
 		}
