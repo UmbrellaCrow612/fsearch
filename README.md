@@ -28,8 +28,8 @@ fsearch <search-term> [flags] <path>
 | `--lines`           | integer  | Number of lines to show in preview if type is `file` and number is greater than `0` | 10        | `fsearch data.csv --preview --lines=20 ./`                   |
 | `--limit`           | integer  | Maximum number of matches to return                                                 | unlimited | `fsearch test --partial --limit=5 ./`                        |
 | `--depth`           | integer  | Maximum folder depth to search                                                      | unlimited | `fsearch index --partial --depth=3 ./src`                    |
-| `--ext`             | string[] | List of file extensions to include (comma-separated)                                | all       | `fsearch config --ext=txt,md,log ./`                         |
-| `--exclude-ext`     | string[] | List of file extensions to exclude (comma-separated)                                | none      | `fsearch backup --exclude-ext=tmp,bak ./`                    |
+| `--ext`             | string[] | List of file extensions to include (comma-separated) without the `.`                | all       | `fsearch config --ext=txt,md,log ./`                         |
+| `--exclude-ext`     | string[] | List of file extensions to exclude (comma-separated) without the `.`                | none      | `fsearch backup --exclude-ext=tmp,bak ./`                    |
 | `--exclude-dir`     | string[] | List of directories to exclude (comma-separated)                                    | none      | `fsearch index --partial --exclude-dir=node_modules,.git ./` |
 | `--min-size`        | string   | Minimum file size                                                                   | none      | `fsearch report --min-size=1 ./documents`                    |
 | `--max-size`        | string   | Maximum file size                                                                   | none      | `fsearch config --max-size=10 ./`                            |

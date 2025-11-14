@@ -157,7 +157,9 @@ func readInParallel(root string, argsMap *args.ArgsMap, searchTermRegex *regexp.
 
 			modTime := info.ModTime()
 			size := info.Size()
-			ext := strings.ToLower(filepath.Ext(entry.Name()))
+
+			// The file extension ignoring the .
+			ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(entry.Name())), ".")
 
 			// --- Extension filters ---
 			if len(argsMap.ExcludeExt) > 0 && slices.Contains(argsMap.ExcludeExt, ext) {
