@@ -40,7 +40,7 @@ $Targets = @(
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 New-Item -ItemType Directory -Force -Path $BuildDir  | Out-Null
 
-$AssetList = @()  # To keep track of built assets
+$AssetList = @()  # To keep track of built ZIPs
 
 foreach ($target in $Targets) {
     $OS   = $target.OS
@@ -65,16 +65,10 @@ foreach ($target in $Targets) {
     $ArchivePath = Join-Path $OutputDir $ArchiveName
     Compress-Archive -Path $BinaryPath -DestinationPath $ArchivePath -Force
 
-    # Generate SHA256
-    $FileHash = (Get-FileHash $ArchivePath -Algorithm SHA256).Hash
-    $HashFile  = "$ArchivePath.sha256"
-    $FileHash | Out-File $HashFile -Encoding ascii
+    Write-Host "Built and packaged $ArchiveName"
 
-    Write-Host "Built and packaged $ArchiveName with SHA256: $FileHash"
-
-    # Add both archive and SHA file to asset list
+    # Add archive to asset list
     $AssetList += $ArchivePath
-    $AssetList += $HashFile
 }
 
 Write-Host "All builds complete! Packages are in $OutputDir"
@@ -93,32 +87,5 @@ foreach ($file in $AssetList) {
     Write-Host "Uploading asset: $([System.IO.Path]::GetFileName($file))"
     gh release upload $ReleaseTag --repo $Repo $file --clobber
 }
-
-# Fetch asset download URLs
-Write-Host "Retrieving download URLs"
-$AssetJson = gh release view $ReleaseTag --repo $Repo --json assets
-$Assets    = ($AssetJson | ConvertFrom-Json).assets
-
-# Update README.md
-$ReadmePath       = "./README.md"
-$BackupReadmePath = "./README.md.bak.$((Get-Date).ToString('yyyyMMddHHmmss'))"
-Copy-Item $ReadmePath $BackupReadmePath -Force
-Write-Host "Backed up README to $BackupReadmePath"
-
-$DownloadSection = "`n## Downloads for $Version`n"
-foreach ($asset in $Assets) {
-    $name = $asset.name
-    $url  = $asset.browser_download_url
-    # Check if it's a SHA file
-    if ($name -like "*.sha256") {
-        $DownloadSection += "  SHA256: $url`n"
-    } else {
-        $DownloadSection += "- [$name]($url)`n"
-    }
-}
-
-# Append the download section to README
-Add-Content $ReadmePath $DownloadSection
-Write-Host "Updated README with download links."
 
 Write-Host "Release flow completed successfully for version $Version"
